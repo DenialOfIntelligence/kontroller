@@ -29,21 +29,21 @@ impl Default for State {
             for tasks in rx {
                 match tasks {
                     Task::FW => {
-                        if addr.len() != 0 {
+                        if !addr.is_empty() {
                             post(&addr, "state", "1");
                             println!("Recieved FW ");
                         }
                     }
 
                     Task::BW => {
-                        if addr.len() != 0 {
+                        if !addr.is_empty() {
                             post(&addr, "state", "2");
                             println!("Recieved BW");
                         }
                     }
 
                     Task::OFF => {
-                        if addr.len() != 0 {
+                        if !addr.is_empty() {
                             post(&addr, "state", "3");
                             println!("Recieved OFF")
                         }
@@ -56,7 +56,7 @@ impl Default for State {
 
                     Task::Speed(i) => {
                         speed = i;
-                        if addr.len() != 0 {
+                        if !addr.is_empty() {
                             post(&addr, "speed", speed);
                             println!("Changed speed to {}", &speed.round());
                         }
@@ -68,7 +68,7 @@ impl Default for State {
         State {
             addr: String::default(),
             speed: f64::default(),
-            tx: tx,
+            tx,
         }
     }
 }
@@ -124,7 +124,7 @@ impl Application for State {
                 Command::none()
             }
             Message::Speed(speed) => {
-                self.tx.send(Task::Speed(self.speed.clone())).unwrap();
+                self.tx.send(Task::Speed(self.speed)).unwrap();
                 self.speed = speed;
                 Command::none()
             }

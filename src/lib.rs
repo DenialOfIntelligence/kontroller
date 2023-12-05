@@ -1,6 +1,6 @@
 use reqwest::Client;
 use serde::ser::Serialize;
-use tokio;
+
 #[tokio::main]
 pub async fn post<T: Serialize>(addr: &String, form_a: &str, form_b: T) {
     let c = Client::new();
