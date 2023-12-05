@@ -1,19 +1,13 @@
-use iced::executor;
-use iced::widget::Column;
 use iced::widget::container;
-use iced::widget::{button, text_input,Slider};
-use iced::Renderer;
-use iced::{
-    Alignment, Application, Command, Element, Length, Settings, Theme,
-};
-use reqwest::Client;
+use iced::widget::Column;
+use iced::widget::{button, text_input, Slider};
+use iced::{executor, Alignment, Application, Command, Element, Length, Renderer, Settings, Theme};
+use kontroller::post;
+use std::sync::mpsc;
 use std::sync::mpsc::Sender;
 use std::thread;
-use std::sync::mpsc;
-use kontroller::post;
 
 pub fn main() -> iced::Result {
-    
     State::run(Settings {
         exit_on_close_request: true,
         ..Settings::default()
@@ -23,56 +17,54 @@ pub fn main() -> iced::Result {
 struct State {
     addr: String,
     speed: f64,
-    tx: Sender<Task>
-    }
+    tx: Sender<Task>,
+}
 
 impl Default for State {
     fn default() -> Self {
         let (tx, rx) = mpsc::channel();
-        thread::spawn (move|| {
+        thread::spawn(move || {
             let mut addr = String::new();
             let mut speed: f64;
             for tasks in rx {
                 match tasks {
                     Task::FW => {
-                        if addr.len() != 0{
-                            post(&addr,"state","1");
+                        if addr.len() != 0 {
+                            post(&addr, "state", "1");
                             println!("Recieved FW ");
                         }
                     }
-                    
+
                     Task::BW => {
                         if addr.len() != 0 {
-                            post(&addr,"state","2");
+                            post(&addr, "state", "2");
                             println!("Recieved BW");
-                            }
                         }
-                        
+                    }
+
                     Task::OFF => {
                         if addr.len() != 0 {
-                            post(&addr,"state","3");
+                            post(&addr, "state", "3");
                             println!("Recieved OFF")
                         }
                     }
-                    
+
                     Task::Addr(s) => {
-                        addr=s;
+                        addr = s;
                         println!("Changed addr to {}", &addr);
                     }
-                    
+
                     Task::Speed(i) => {
-                        speed=i;
+                        speed = i;
                         if addr.len() != 0 {
                             post(&addr, "speed", speed);
                             println!("Changed speed to {}", &speed.round());
                         }
                     }
-                    
-                    }
                 }
             }
-        );
-        
+        });
+
         State {
             addr: String::default(),
             speed: f64::default(),
@@ -81,13 +73,13 @@ impl Default for State {
     }
 }
 
-#[derive(Debug,Clone)]
+#[derive(Debug, Clone)]
 enum Message {
     Addr(String),
     FW,
     BW,
     Stop,
-    Speed(f64)
+    Speed(f64),
 }
 
 enum Task {
@@ -95,7 +87,7 @@ enum Task {
     BW,
     OFF,
     Speed(f64),
-    Addr(String)
+    Addr(String),
 }
 
 impl Application for State {
@@ -103,15 +95,15 @@ impl Application for State {
     type Theme = Theme;
     type Executor = executor::Default;
     type Flags = ();
-    
+
     fn new(_flags: ()) -> (State, Command<Message>) {
         (State::default(), Command::none())
     }
-    
-     fn title(&self) -> String {
+
+    fn title(&self) -> String {
         String::from("Click counter")
     }
-    
+
     fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
         match message {
             Message::FW => {
@@ -126,37 +118,37 @@ impl Application for State {
                 self.tx.send(Task::OFF).unwrap();
                 Command::none()
             }
-            Message::Addr(addr)=>{
+            Message::Addr(addr) => {
                 self.tx.send(Task::Addr(addr.clone())).unwrap();
-                self.addr=addr;
+                self.addr = addr;
                 Command::none()
             }
-            Message::Speed(speed)=> {
+            Message::Speed(speed) => {
                 self.tx.send(Task::Speed(self.speed.clone())).unwrap();
-                self.speed=speed;
+                self.speed = speed;
                 Command::none()
             }
-            
         }
     }
-    
-    
+
     fn view(&self) -> Element<Message> {
-        let input = text_input("ip with /motor attached",&self.addr)
+        let input = text_input("ip with /motor attached", &self.addr)
             .on_input(Message::Addr)
             .padding(30)
             .width(200);
 
-        
-        let fw_button: iced::widget::Button<'_, Message, Renderer> = button("Forwords").on_press(Message::FW).padding(40);
-        
-        let bw_button: iced::widget::Button<'_, Message, Renderer> = button("Backwords").on_press(Message::BW).padding(40);
-        
-        let stop_button: iced::widget::Button<'_, Message, Renderer> = button("OFF").on_press(Message::Stop).padding(40);
-        
+        let fw_button: iced::widget::Button<'_, Message, Renderer> =
+            button("Forwords").on_press(Message::FW).padding(40);
+
+        let bw_button: iced::widget::Button<'_, Message, Renderer> =
+            button("Backwords").on_press(Message::BW).padding(40);
+
+        let stop_button: iced::widget::Button<'_, Message, Renderer> =
+            button("OFF").on_press(Message::Stop).padding(40);
+
         let slider = Slider::new(0.0..=255.0, self.speed, Message::Speed).width(200);
-        
-        let content= Column::new()
+
+        let content = Column::new()
             .align_items(Alignment::Center)
             .spacing(20)
             .push(input)
@@ -164,7 +156,7 @@ impl Application for State {
             .push(bw_button)
             .push(stop_button)
             .push(slider);
-            
+
         container(content)
             .width(Length::Fill)
             .height(Length::Fill)
@@ -172,7 +164,4 @@ impl Application for State {
             .center_y()
             .into()
     }
-
 }
-
-
