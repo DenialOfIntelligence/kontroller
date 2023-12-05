@@ -2,7 +2,7 @@ use iced::widget::container;
 use iced::widget::Column;
 use iced::widget::{button, text_input, Slider};
 use iced::{executor, Alignment, Application, Command, Element, Length, Renderer, Settings, Theme};
-use kontroller::post;
+use kontroller::*;
 use std::sync::mpsc;
 use std::sync::mpsc::Sender;
 use std::thread;
@@ -71,23 +71,6 @@ impl Default for State {
             tx,
         }
     }
-}
-
-#[derive(Debug, Clone)]
-enum Message {
-    Addr(String),
-    FW,
-    BW,
-    Stop,
-    Speed(f64),
-}
-
-enum Task {
-    FW,
-    BW,
-    OFF,
-    Speed(f64),
-    Addr(String),
 }
 
 impl Application for State {
